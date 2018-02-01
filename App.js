@@ -2,7 +2,8 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 // import ListDecks from './components/ListDecks'
 // import Deck from './components/Deck'
-import AddDeck from './components/AddDeck'
+// import AddDeck from './components/AddDeck'
+import AddCard from './components/AddCard'
 
 export default class App extends React.Component {
   render() {
@@ -10,7 +11,8 @@ export default class App extends React.Component {
       <View style={styles.container}>
         {/* <ListDecks /> */}
         {/* <Deck /> */}
-        <AddDeck />
+        {/* <AddDeck /> */}
+        <AddCard />
       </View>
     )
   }
