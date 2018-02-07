@@ -5,10 +5,8 @@ This is the final assessment project for Udacity's React Native course. It allow
 ## Start Developing
 
 * Requirements
-```
   - [Yarn package manager](https://yarnpkg.com/en/docs/install)
   - Android/iOS device with [Expo](https://expo.io/tools) or another device simulator
-```
 
 * Install and start
 ```
