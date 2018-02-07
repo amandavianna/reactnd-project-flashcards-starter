@@ -1,41 +1,46 @@
 import React, { Component } from 'react'
 import { StyleSheet, View, Text, Button, TouchableOpacity } from 'react-native'
-import { getDecks } from '../utils/helpers'
+import { connect } from 'react-redux'
 import { pink, white, grey, darkGrey} from '../utils/colors'
+import { getDeck } from '../utils/api'
 
-export default class Deck extends Component {
+class Deck extends Component {
+  static navigationOptions = ({ navigation }) => {
+    return {
+      title: navigation.state.params.deckTitle
+    }
+  }
 
   render() {
-    const decks = getDecks()
-
-    const { getIcon, title, questions } = decks['React']
+    const { deck, navigation } = this.props
 
     return (
       <View style={styles.container}>
         <View>
-          <Text style={styles.deckTitle}>{title}</Text>
-          <Text style={styles.deckSubtitle}>{questions.length} cards</Text>
+          <Text style={styles.deckTitle}>{deck.title}</Text>
+          <Text style={styles.deckSubtitle}>{deck.questions.length} cards</Text>
         </View>
 
         <View>
           <TouchableOpacity
-            onPress={() => console.log('Add Card')}
+            onPress={() => navigation.navigate('AddCard', {deck})}
             style={[styles.btn, styles.addBtn]}
           >
             <Text style={[styles.btnText, styles.addBtnText]}>Add Card</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => console.log('Start Quiz')}
-            style={[styles.btn, styles.quizBtn]}
-          >
-            <Text style={[styles.btnText, styles.quizBtnText]}>Start Quiz</Text>
-          </TouchableOpacity>
+          {(deck.questions.length > 0) &&
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Quiz', {deck})}
+              style={[styles.btn, styles.quizBtn]}
+            >
+              <Text style={[styles.btnText, styles.quizBtnText]}>Start Quiz</Text>
+            </TouchableOpacity>
+          }
         </View>
       </View>
     )
   }
-
 }
 
 const styles = StyleSheet.create({
@@ -82,3 +87,13 @@ const styles = StyleSheet.create({
     color: white
   }
 })
+
+const mapStateToProps = (state, ownProps) => {
+  const deck = state[ownProps.navigation.state.params.deckTitle]
+
+  return {
+    deck
+  }
+}
+
+export default connect(mapStateToProps)(Deck)

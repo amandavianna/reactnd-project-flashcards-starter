@@ -1,13 +1,37 @@
 import React, { Component } from 'react'
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView } from 'react-native'
-import { pink, white, darkGrey } from '../utils/colors'
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Keyboard } from 'react-native'
+import { connect } from 'react-redux'
+import { pink, white, darkGrey, red } from '../utils/colors'
+import { addDeck } from '../actions'
+import { saveDeckTitle } from '../utils/api'
 
-export default class AddDeck extends Component {
+class AddDeck extends Component {
   constructor(props) {
     super(props)
 
     this.state = {
-      title: ''
+      title: '',
+      textValidation: false
+    }
+  }
+
+  handleSubmit = () => {
+    const { title, textValidation } = this.state
+
+    if(title) {
+      this.props.dispatch(addDeck(title))
+      saveDeckTitle(title)
+
+      this.setState(() => ({
+        title: '',
+        textValidation: false
+      }))
+
+      this.props.navigation.navigate('Deck', {
+        deckTitle: title
+      })
+    } else {
+      this.setState({ textValidation: true })
     }
   }
 
@@ -17,16 +41,22 @@ export default class AddDeck extends Component {
         style={styles.container}
         behavior="padding"
       >
-        <Text style={styles.title}>What is the title of your new deck?</Text>
-        <TextInput
-          onChangeText={(title) => this.setState({title})}
-          value={this.state.title}
-          style={styles.textInput}
-        />
+        <View style={{marginBottom: 30, alignSelf: 'stretch'}}>
+          <Text style={styles.title}>What is the title of your new deck?</Text>
+          <TextInput
+            onChangeText={(title) => this.setState({title})}
+            value={this.state.title}
+            style={styles.textInput}
+          />
+          {this.state.textValidation && (
+            <Text style={styles.textValidation}>This field is required.</Text>
+          )}
+        </View>
+
         <TouchableOpacity
-          onPress={() => console.log('Add new deck')}
+          onPress={this.handleSubmit}
           style={styles.btn}
-        >
+          >
           <Text style={styles.btnText}>Submit</Text>
         </TouchableOpacity>
       </KeyboardAvoidingView>
@@ -43,7 +73,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontWeight: 'bold',
-    fontSize: 42,
+    fontSize: 30,
     color: darkGrey,
     marginBottom: 30,
     textAlign: 'center'
@@ -54,12 +84,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     color: darkGrey,
     backgroundColor: white,
-    alignSelf: 'stretch',
-    padding: 10,
-    marginBottom: 30
+    padding: 10
+  },
+  textValidation: {
+    marginTop: 5,
+    color: red
   },
   btn: {
-    alignItems: 'center',
+    alignSelf: 'center',
     borderRadius: 5,
     backgroundColor: pink,
   },
@@ -70,3 +102,5 @@ const styles = StyleSheet.create({
     color: white
   }
 })
+
+export default connect()(AddDeck)

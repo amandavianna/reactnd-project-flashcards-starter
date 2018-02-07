@@ -1,55 +1,128 @@
 import React, { Component } from 'react'
 import { StyleSheet, View, Text, Button, TouchableOpacity } from 'react-native'
-import { getDecks } from '../utils/helpers'
-import { red, green, white, grey, darkGrey} from '../utils/colors'
+import { connect } from 'react-redux'
+import { red, green, white, grey, darkGrey, pink } from '../utils/colors'
+import { FontAwesome, SimpleLineIcons } from '@expo/vector-icons'
+import {
+  clearLocalNotification,
+  setLocalNotification
+} from '../utils/helpers'
 
-export default class Quiz extends Component {
+class Quiz extends Component {
+
+  static navigationOptions = ({ navigation }) => {
+    return {
+      title: `Quiz: ${navigation.state.params.deck.title}`
+    }
+  }
 
   constructor(props) {
     super(props)
 
     this.state = {
-      cardNumber: 0
+      cardNumber: 0,
+      score: 0,
+      showQuestion: true
     }
   }
 
   render() {
-    const decks = getDecks()
+    const { deck, navigation } = this.props
 
-    const { getIcon, title, questions } = decks['React']
-    const { cardNumber } = this.state
+    const { cardNumber, showQuestion, score } = this.state
 
-    return (
-      <View style={styles.container}>
-        <View>
-          <Text style={styles.cardNumber}>{cardNumber + 1} of {questions.length}</Text>
+    if (cardNumber < deck.questions.length) {
+      return (
+        <View style={styles.container}>
+          <Text style={{alignSelf: 'flex-start', fontSize: 14}}>{cardNumber + 1} of {deck.questions.length}</Text>
+
+          <View style={{alignItems: 'center', justifyContent: 'space-around', flex: 1}}>
+            <View style={{alignItems: 'center'}}>
+              <Text style={styles.quizTitle}>
+                { showQuestion ? deck.questions[cardNumber].question : deck.questions[cardNumber].answer }
+              </Text>
+
+              <TouchableOpacity onPress={() => this.setState({ showQuestion: !showQuestion })} >
+                <Text style={styles.quizLink}>
+                  { showQuestion ? 'Answer' : 'Question' }
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View>
+              <TouchableOpacity
+                onPress={() => {
+                  this.setState({
+                    score: score + 1,
+                    cardNumber: cardNumber + 1,
+                    showQuestion: !showQuestion
+                  })
+                }}
+                style={[styles.btn, { marginBottom: 10, backgroundColor: showQuestion ? green + '7F'  : green } ]}
+                disabled={ showQuestion }
+              >
+                <Text style={styles.btnText}>Correct</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  this.setState({
+                    cardNumber: cardNumber + 1,
+                    showQuestion: !showQuestion
+                  })
+                }}
+                style={[styles.btn, { backgroundColor: showQuestion ? red + '7F'  : red }]}
+                disabled={ showQuestion }
+              >
+                <Text style={styles.btnText}>Incorrect</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
+      )
+    } else {
+      return (
+        <View style={styles.container}>
+          <Text style={styles.resultText}>Result: You got {score} out of {deck.questions.length}</Text>
+          {score === deck.questions.length ?
+            <FontAwesome
+              name= 'flag-checkered'
+              size={80}
+              color={grey}
+              style={{marginBottom: 20}}
+            />
+          :
+            <SimpleLineIcons
+              name= 'emotsmile'
+              size={80}
+              color={grey}
+              style={{marginBottom: 20}}
+            />
+          }
+          <View>
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate('Quiz', {deck})
+                clearLocalNotification().then(setLocalNotification)
+              }}
+              style={[styles.btn, {backgroundColor: pink, marginBottom: 10}]}
+            >
+              <Text style={styles.btnText}>Restart Quiz</Text>
+            </TouchableOpacity>
 
-        <View>
-          <Text style={styles.quizTitle}>{questions[cardNumber].question}</Text>
-
-          <TouchableOpacity onPress={() => console.log('Answer/Question')} >
-            <Text style={styles.quizLink}>Answer/Question</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate('Deck', { deckTitle: deck.title })
+                clearLocalNotification().then(setLocalNotification)
+              }}
+              style={[styles.btn, {backgroundColor: pink}]}
+            >
+              <Text style={styles.btnText}>Back to Deck</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-
-        <View>
-          <TouchableOpacity
-            onPress={() => console.log('Correct')}
-            style={[styles.btn, styles.correctBtn]}
-          >
-            <Text style={styles.btnText}>Correct</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => console.log('Incorrect')}
-            style={[styles.btn, styles.incorrectBtn]}
-          >
-            <Text style={styles.btnText}>Incorrect</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    )
+      )
+    }
   }
 
 }
@@ -58,9 +131,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'space-around',
-    alignItems: 'center'
-  },
-  cardNumber: {
+    alignItems: 'center',
+    padding: 10
   },
   quizTitle: {
     fontWeight: 'bold',
@@ -70,10 +142,9 @@ const styles = StyleSheet.create({
     textAlign: 'center'
   },
   quizLink: {
-    fontWeight: '200',
+    fontWeight: '400',
     color: red,
-    fontSize: 20,
-    alignSelf: 'center'
+    fontSize: 20
   },
   btn: {
     width: 200,
@@ -86,11 +157,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: white
   },
-  correctBtn: {
-    backgroundColor: green,
-    marginBottom: 10
-  },
-  incorrectBtn: {
-    backgroundColor: red
+  resultText: {
+    fontSize: 28,
+    marginBottom: 30
   }
 })
+
+const mapStateToProps = (state, ownProps) => {
+  const deck = ownProps.navigation.state.params.deck
+
+  return {
+    deck
+  }
+}
+
+export default connect(mapStateToProps)(Quiz)

@@ -1,30 +1,54 @@
 import React, { Component } from 'react'
 import { StyleSheet, ScrollView, View, Text, TouchableOpacity } from 'react-native'
-import { MaterialCommunityIcons } from '@expo/vector-icons'
-import { getDecks } from '../utils/helpers'
-import { grey, ligthGrey, darkGrey } from '../utils/colors'
+import { MaterialCommunityIcons, SimpleLineIcons } from '@expo/vector-icons'
+import { grey, ligthGrey, darkGrey, pink, white } from '../utils/colors'
+import { connect } from 'react-redux'
+import { getAllDecks } from '../actions'
+import { getDecks } from '../utils/api'
 
-export default class ListDecks extends Component {
+class ListDecks extends Component {
+  async componentDidMount() {
+    const decks = await getDecks()
+    this.props.dispatch(getAllDecks(decks))
+  }
 
   render() {
-    const decks = getDecks()
+    const { decks, navigation } = this.props
+
+    if(!decks || Object.keys(decks).length === 0 && decks.constructor === Object) {
+      return (
+        <View style={styles.containerInfo}>
+          <Text style={styles.info}>No deck found</Text>
+          <SimpleLineIcons
+            name= 'emotsmile'
+            size={80}
+            color={grey}
+            style={{marginBottom: 20}}
+          />
+          <TouchableOpacity
+            onPress={() => navigation.navigate('AddDeck')}
+            style={styles.addBtn}
+          >
+            <Text style={styles.addBtnText}>Add New Deck</Text>
+          </TouchableOpacity>
+        </View>
+      )
+    }
 
     return (
       <ScrollView>
         <View style={styles.container}>
-          {Object.keys(decks).map((deck) => {
-            const { getIcon, title, questions } = decks[deck]
-
-            return (
+          {Object.keys(decks).map((deck) => (
               <View style={styles.deckSection} key={deck}>
                 <TouchableOpacity
-                  onPress={() => console.log('clicou')}
+                  onPress={() => navigation.navigate('Deck', {
+									  deckTitle: decks[deck].title
+								  })}
                 >
                   <View style={styles.deckView}>
-                    <View style={{alignSelf: 'center'}}>{getIcon()}</View>
                     <View style={{flex: 2, marginHorizontal: 10}}>
-                      <Text style={styles.deckTitle}>{title}</Text>
-                      <Text style={styles.deckSubtitle}>{questions.length} cards</Text>
+                      <Text style={styles.deckTitle}>{decks[deck].title}</Text>
+                      <Text style={styles.deckSubtitle}>{decks[deck].questions.length} cards</Text>
                     </View>
                     <View style={{alignSelf: 'center'}}>
                       <MaterialCommunityIcons
@@ -36,13 +60,11 @@ export default class ListDecks extends Component {
                   </View>
                 </TouchableOpacity>
               </View>
-            )
-          })}
+          ))}
         </View>
       </ScrollView>
     )
   }
-
 }
 
 const styles = StyleSheet.create({
@@ -50,6 +72,28 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'stretch'
+  },
+  containerInfo: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  info: {
+    fontSize: 20,
+    marginBottom: 20
+  },
+  addBtn: {
+    width: 200,
+    alignItems: 'center',
+    borderRadius: 5,
+    backgroundColor: pink,
+    marginBottom: 10
+  },
+  addBtnText: {
+    paddingHorizontal: 30,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: white
   },
   deckSection: {
     borderBottomColor: ligthGrey,
@@ -59,8 +103,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 20,
-    paddingHorizontal: 10
+    padding: 10
   },
   deckTitle: {
     fontWeight: '500',
@@ -73,3 +116,13 @@ const styles = StyleSheet.create({
     fontSize: 16
   }
 })
+
+const mapStateToProps = (state) => {
+  const decks = state
+
+  return {
+    decks
+  }
+}
+
+export default connect(mapStateToProps)(ListDecks)

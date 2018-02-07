@@ -1,14 +1,40 @@
 import React, { Component } from 'react'
-import { StyleSheet, Text, TextInput, TouchableOpacity, KeyboardAvoidingView} from 'react-native'
-import { pink, white, darkGrey } from '../utils/colors'
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Keyboard} from 'react-native'
+import { connect } from 'react-redux'
+import { pink, white, darkGrey, red } from '../utils/colors'
+import { addCard } from '../actions'
+import { addCardToDeck } from '../utils/api'
 
-export default class AddDeck extends Component {
+class AddCard extends Component {
   constructor(props) {
     super(props)
 
     this.state = {
       question: '',
-      answer: ''
+      answer: '',
+      textValidation: false
+    }
+  }
+
+  handleSubmit = () => {
+    const { question, answer, textValidation } = this.state
+    const { title } = this.props.navigation.state.params.deck
+
+    if(question && answer) {
+      this.props.dispatch(addCard(title, { question, answer }))
+
+      this.setState(() => ({
+        question: '',
+        answer: '',
+        textValidation: false
+      }))
+
+      addCardToDeck(title, { question, answer })
+
+      this.props.navigation.goBack()
+
+    } else {
+      this.setState({textValidation: true})
     }
   }
 
@@ -18,20 +44,35 @@ export default class AddDeck extends Component {
         style={styles.container}
         behavior="padding"
       >
-        <TextInput
-          onChangeText={(question) => this.setState({question})}
-          value={this.state.question}
-          placeholder='Add a new question'
-          style={styles.textInput}
-        />
-        <TextInput
-          onChangeText={(answer) => this.setState({answer})}
-          value={this.state.answer}
-          placeholder='Add a new answer'
-          style={styles.textInput}
-        />
+        <View style={{marginBottom: 20, alignSelf: 'stretch'}}>
+          <Text style={styles.label}>Question:</Text>
+          <TextInput
+            onChangeText={(question) => this.setState({question})}
+            value={this.state.question}
+            placeholder='Add a new question'
+            style={styles.textInput}
+          />
+
+          {this.state.textValidation && !this.state.question && (
+            <Text style={styles.textValidation}>This field is required.</Text>
+          )}
+        </View>
+
+        <View style={{marginBottom: 30, alignSelf: 'stretch'}}>
+          <Text style={styles.label}>Answer:</Text>
+          <TextInput
+            onChangeText={(answer) => this.setState({answer})}
+            value={this.state.answer}
+            placeholder='Add a new answer'
+            style={styles.textInput}
+          />
+          {this.state.textValidation && !this.state.answer && (
+            <Text style={styles.textValidation}>This field is required.</Text>
+          )}
+        </View>
+
         <TouchableOpacity
-          onPress={() => console.log('Add new card')}
+          onPress={this.handleSubmit}
           style={styles.btn}
         >
           <Text style={styles.btnText}>Submit</Text>
@@ -45,8 +86,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20
+    alignItems: 'flex-start',
+    paddingHorizontal: 10
+  },
+  label: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: darkGrey,
+    marginBottom: 5
   },
   textInput: {
     borderRadius: 5,
@@ -54,12 +101,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     color: darkGrey,
     backgroundColor: white,
-    alignSelf: 'stretch',
-    padding: 10,
-    marginBottom: 30
+    padding: 10
+  },
+  textValidation: {
+    marginTop: 5,
+    color: red
   },
   btn: {
-    alignItems: 'center',
+    alignSelf: 'center',
     borderRadius: 5,
     backgroundColor: pink,
   },
@@ -70,3 +119,5 @@ const styles = StyleSheet.create({
     color: white
   }
 })
+
+export default connect()(AddCard)

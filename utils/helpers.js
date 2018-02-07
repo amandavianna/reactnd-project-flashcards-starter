@@ -1,120 +1,54 @@
-import React from 'react'
-import { View } from 'react-native'
-import { MaterialCommunityIcons } from '@expo/vector-icons'
-import { grey } from './colors'
+import { AsyncStorage } from 'react-native'
+import { Notifications, Permissions } from 'expo'
 
-export function getDecks(deck) {
-  const info = {
-    React: {
-      title: 'React',
-      questions: [
-        {
-          question: 'Primeira pergunta card 1?',
-          answer: 'Primeira resposta card 1'
-        },
-        {
-          question: 'Segunda pergunta card 1?',
-          answer: 'Segunda resposta card 1'
-        },
-        {
-          question: 'Terceira pergunta card 1?',
-          answer: 'Terceira resposta card 1'
-        }
-      ],
-      getIcon() {
-        return (
-          <View>
-            <MaterialCommunityIcons
-              name= 'react'
-              color= {grey}
-              size={50}
-            />
-          </View>
-        )
-      }
-    },
-    JavaScript: {
-      title: 'JavaScript',
-      questions: [
-        {
-          question: 'Primeira pergunta card 2?',
-          answer: 'Primeira resposta card 2'
-        }
-      ],
-      getIcon() {
-        return (
-          <View>
-            <MaterialCommunityIcons
-              name= 'language-javascript'
-              color= {grey}
-              size={50}
-            />
-          </View>
-        )
-      }
-    },
-    Android: {
-      title: 'Android',
-      questions: [
-        {
-          question: 'Primeira pergunta card 3?',
-          answer: 'Primeira resposta card 3'
-        }
-      ],
-      getIcon() {
-        return (
-          <View>
-            <MaterialCommunityIcons
-              name= 'android'
-              color= {grey}
-              size={50}
-            />
-          </View>
-        )
-      }
-    },
-    iOS: {
-      title: 'iOS',
-      questions: [
-        {
-          question: 'Primeira pergunta card 3?',
-          answer: 'Primeira resposta card 3'
-        }
-      ],
-      getIcon() {
-        return (
-          <View>
-            <MaterialCommunityIcons
-              name= 'apple'
-              color= {grey}
-              size={50}
-            />
-          </View>
-        )
-      }
-    },
-    Angular: {
-      title: 'Angular',
-      questions: [
-        {
-          question: 'Primeira pergunta card 3?',
-          answer: 'Primeira resposta card 3'
-        }
-      ],
-      getIcon() {
-        return (
-          <View>
-            <MaterialCommunityIcons
-              name= 'angular'
-              color= {grey}
-              size={50}
-            />
-          </View>
-        )
-      }
-    }
-  }
-  return typeof deck === 'undefined'
-    ? info
-    : info[deck]
+const NOTIFICATION_KEY = 'Flashcards:notifications'
+
+export function clearLocalNotification() {
+  return AsyncStorage.removeItem(NOTIFICATION_KEY)
+    .then(Notifications.cancelAllScheduledNotificationsAsync())
+}
+
+export function createNotification() {
+	return {
+		title: 'Flashcards are waiting!',
+		body: "Don't forget to take your quiz today!",
+		ios: {
+			sound: true
+		},
+		android: {
+			sound: true,
+			priority: 'high',
+			sticky: false,
+			vibrate: true
+		}
+	}
+}
+
+export function setLocalNotification() {
+	AsyncStorage.getItem(NOTIFICATION_KEY)
+		.then(JSON.parse)
+		.then(data => {
+			if (data === null) {
+        Permissions.askAsync(Permissions.NOTIFICATIONS)
+          .then(({ status }) => {
+            if (status === 'granted') {
+              Notifications.cancelAllScheduledNotificationsAsync()
+
+              let tomorrow = new Date()
+              tomorrow.setDate(tomorrow.getDate() + 1)
+              tomorrow.setHours(20)
+              tomorrow.setMinutes(30)
+
+              Notifications.scheduleLocalNotificationAsync(
+                createNotification(), {
+                  time: tomorrow,
+                  repeat: 'day'
+                }
+              )
+
+              AsyncStorage.setItem(NOTIFICATION_KEY, JSON.stringify(true))
+            }
+				  })
+			}
+		})
 }
